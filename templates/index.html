@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF to Image and Image to PDF Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: radial-gradient(circle, #ff9a9e 40%, #fad0c4 80%);
+            animation: gradientAnimation 10s ease infinite;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-label:hover {
+            transform: scale(1.05);
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-upload-input {
+            display: none;
+        }
+
+        .file-upload-input + .file-upload-label {
+            cursor: pointer;
+        }
+
+        .file-upload-input:focus + .file-upload-label {
+            outline: 1px dotted #000;
+        }
+
+        .file-upload-button {
+            margin-top: 10px;
+            background-color: #008CBA;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .file-list {
+            margin-top: 10px;
+        }
+
+        .file-item {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Additional background animation */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            z-index: -1;
+            animation: backgroundAnimation 8s linear infinite;
+        }
+
+        @keyframes backgroundAnimation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>PDF to Image Conversion</h1>
+        <form action="/pdf_to_image" method="post" enctype="multipart/form-data">
+            <label class="file-upload-label" for="pdf_file">Select PDF File</label>
+            <input type="file" name="pdf_file" id="pdf_file" class="file-upload-input">
+            <input type="submit" value="Convert to Images" class="file-upload-button">
+            <div class="file-list" id="pdf_images"></div>
+        </form>
+
+        <h1>Image to PDF Conversion</h1>
+        <form action="/image_to_pdf" method="post" enctype="multipart/form-data">
+            <label class="file-upload-label" for="image_files">Select Image Files</label>
+            <input type="file" name="image_files" id="image_files" class="file-upload-input" multiple>
+            <input type="submit" value="Convert to PDF" class="file-upload-button">
+            <div class="file-list" id="image_pdf"></div>
+        </form>
+    </div>
+
+    <script>
+        const pdfImages = document.getElementById('pdf_images');
+        const imagePdf = document.getElementById('image_pdf');
+
+        // Function to display converted files after form submission
+        function displayConvertedFiles(data, container) {
+            container.innerHTML = '';
+            if (data && data.length > 0) {
+                data.forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.classList.add('file-item');
+                    const link = document.createElement('a');
+                    link.href = file;
+                    link.textContent = `Download ${index === 0 ? 'PDF' : 'Image'} file`;
+                    fileItem.appendChild(link);
+                    container.appendChild(fileItem);
+                });
+            }
+        }
+
+        // Function to handle form submission for PDF to image conversion
+        document.querySelector('form[action="/pdf_to_image"]').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            fetch('/pdf_to_image', {
+                method: 'POST',
+                body: formData
+            })
+            .then((response) => response.json())
+            .then((data) => displayConvertedFiles(data.image_paths, pdfImages));
+        });
+
+        // Function to handle form submission for image to PDF conversion
+        document.querySelector('form[action="/image_to_pdf"]').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            fetch('/image_to_pdf', {
+                method: 'POST',
+                body: formData
+            })
+            .then((response) => response.json())
+            .then((data) => displayConvertedFiles([data.pdf_path], imagePdf));
+        });
+    </script>
+</body>
+</html>
